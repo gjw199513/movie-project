@@ -179,7 +179,7 @@ class Oplog(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # 编号
     admin_id = db.Column(db.Integer, db.ForeignKey('admin.id'))  # 所属管理员
     ip = db.Column(db.String(100))  # 操作IP
-    reson = db.Column(db.String(600))  # 操作原因
+    reason = db.Column(db.String(600))  # 操作原因
     addtime = db.Column(db.DateTime, index=True, default=datetime.now)  # 登录时间
 
     def __repr__(self):
@@ -188,7 +188,7 @@ class Oplog(db.Model):
 
 if __name__ == '__main__':
     # 创建数据表
-    db.create_all()
+    # db.create_all()
 
     # 创建超级管理员角色
     # role = Role(
@@ -207,4 +207,4 @@ if __name__ == '__main__':
     #     role_id=1
     # )
     # db.session.add(admin)
-    # db.session.commit()
+    db.session.commit()
