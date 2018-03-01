@@ -3,17 +3,10 @@ __author__ = 'gjw'
 __date__ = '2018/1/26 15:47'
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from app import db
 import pymysql
-
-app = Flask(__name__)
-# 连接数据库
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:gjw605134015@localhost:3306/movie"
-# 如果设置成 True (默认情况)，Flask-SQLAlchemy 将会追踪对象的修改并且发送信号。
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
-
-db = SQLAlchemy(app)
+from flask_sqlalchemy import SQLAlchemy
 
 
 # 会员
@@ -160,6 +153,11 @@ class Admin(db.Model):
     def __repr__(self):
         return "<Admin %r>" % self.name
 
+    # 验证密码
+    def check_pwd(self, pwd):
+        from werkzeug.security import check_password_hash
+        return check_password_hash(self.pwd, pwd)
+
 
 # 管理员登录日志
 class Adminlog(db.Model):
@@ -167,7 +165,7 @@ class Adminlog(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # 编号
     admin_id = db.Column(db.Integer, db.ForeignKey('admin.id'))  # 所属管理员
     ip = db.Column(db.String(100))  # 登录IP
-    addtim = db.Column(db.DateTime, index=True, default=datetime.now)  # 登录时间
+    addtime = db.Column(db.DateTime, index=True, default=datetime.now)  # 登录时间
 
     def __repr__(self):
         return "<Adminlog %r>" % self.id
@@ -186,6 +184,7 @@ class Oplog(db.Model):
         return "<Oplog %r>" % self.id
 
 
+# """
 if __name__ == '__main__':
     # 创建数据表
     # db.create_all()
@@ -199,12 +198,13 @@ if __name__ == '__main__':
     # db.session.commit()
 
     # 创建超级管理员用户
-    # from werkzeug.security import generate_password_hash
-    # admin = Admin(
-    #     name="gjw199513",
-    #     pwd=generate_password_hash("gjw605134015"),
-    #     is_super=0,
-    #     role_id=1
-    # )
-    # db.session.add(admin)
+    from werkzeug.security import generate_password_hash
+    admin = Admin(
+        name="gjw199513",
+        pwd=generate_password_hash("gjw605134015"),
+        is_super=0,
+        role_id=1
+    )
+    db.session.add(admin)
     db.session.commit()
+# """

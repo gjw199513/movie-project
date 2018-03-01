@@ -2,9 +2,21 @@
 __author__ = 'gjw'
 __date__ = '2018/1/26 15:46'
 from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
+import pymysql
+import os
 
 app = Flask(__name__)
+# 连接数据库
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:gjw605134015@localhost:3306/movie"
+# 如果设置成 True (默认情况)，Flask-SQLAlchemy 将会追踪对象的修改并且发送信号。
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
+# 安全码
+app.config["SECRET_KEY"] = "0993703df6ef45aba560f493b14fc49e"
+
+app.config["UP_DIR"] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/")
 app.debug = True
+db = SQLAlchemy(app)
 
 # 注册蓝图
 from app.home import home as home_blueprint
