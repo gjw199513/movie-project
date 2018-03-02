@@ -28,6 +28,10 @@ class User(db.Model):
     def __repr__(self):
         return "<User %r>" % self.name
 
+    def check_pwd(self, pwd):
+        from werkzeug.security import check_password_hash
+        return check_password_hash(self.pwd, pwd)
+
 
 # 会员登录日志
 class Userlog(db.Model):
@@ -199,6 +203,7 @@ if __name__ == '__main__':
 
     # 创建超级管理员用户
     from werkzeug.security import generate_password_hash
+
     admin = Admin(
         name="gjw199513",
         pwd=generate_password_hash("gjw605134015"),

@@ -548,7 +548,7 @@ def adminloginlog_list(page=None):
 
 
 # 会员日志列表
-@admin.route('/userloginlog/list/<int:page>')
+@admin.route('/userloginlog/list/<int:page>', methods=["GET"])
 @admin_login_req
 @admin_auth
 def userloginlog_list(page=None):
