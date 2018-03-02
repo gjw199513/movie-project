@@ -4,7 +4,7 @@ __date__ = '2018/1/26 15:48'
 from . import home
 from flask import render_template, redirect, url_for, flash, session, request
 from app.home.forms import RegistForm, LoginForm, UserdetailForm, PwdForm
-from app.models import User, Userlog
+from app.models import User, Userlog, Preview, Tag, Movie
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from app import db, app
@@ -184,24 +184,99 @@ def moviecol():
 
 
 # 电影列表
-@home.route('/')
-def index():
-    return render_template('home/index.html')
+@home.route('/<int:page>/', methods=["GET"])
+def index(page=None):
+    tags = Tag.query.all()
+    page_data = Movie.query
+
+    # 根据标签筛选
+    tid = request.args.get('tid', 0)
+    if int(tid) != 0:
+        page_data = page_data.filter_by(tag_id=int(tid))
+
+    # 根据星级筛选
+    star = request.args.get("star", 0)
+    if int(star) != 0:
+        page_data = page_data.filter_by(star=int(star))
+
+    # 根据时间先后筛选
+    time = request.args.get("time", 0)
+    if int(time) != 0:
+        if int(time):
+            page_data = page_data.order_by(
+                Movie.addtime.desc()
+            )
+        else:
+            page_data = page_data.order_by(
+                Movie.addtime.asc()
+            )
+
+    # 根据播放量筛选
+    pm = request.args.get("pm", 0)
+    if int(pm) != 0:
+        if int(pm):
+            page_data = page_data.order_by(
+                Movie.playnum.desc()
+            )
+        else:
+            page_data = page_data.order_by(
+                Movie.playnum.asc()
+            )
+
+    # 根据评论数筛选
+    cm = request.args.get("cm", 0)
+    if int(cm) != 0:
+        if int(cm):
+            page_data = page_data.order_by(
+                Movie.commentnum.desc()
+            )
+        else:
+            page_data = page_data.order_by(
+                Movie.commentnum.asc()
+            )
+    # 获取页码
+    if page is None:
+        page = 1
+    page_data = page_data.paginate(page=page, per_page=10)
+    p = dict(
+        tid=tid,
+        star=star,
+        time=time,
+        pm=pm,
+        cm=cm,
+    )
+    return render_template('home/index.html', tags=tags, p=p, page_data=page_data)
 
 
-# 动画
+# 上映预告
 @home.route('/animation/')
 def animation():
-    return render_template('home/animation.html')
+    data = Preview.query.all()
+    return render_template('home/animation.html', data=data)
 
 
 # 搜索
-@home.route('/search/')
-def search():
-    return render_template('home/search.html')
+@home.route('/search/<int:page>/')
+def search(page=None):
+    if page is None:
+        page = 1
+    key = request.args.get("key", "")
+    movie_count = Movie.query.filter(
+        Movie.title.like('%' + key + '%')
+    ).count()
+    page_data = Movie.query.filter(
+        Movie.title.like('%' + key + '%')
+    ).order_by(
+        Movie.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template('home/search.html', key=key, movie_count=movie_count, page_data=page_data)
 
 
 # 电影详情
-@home.route('/play/')
-def play():
-    return render_template('home/play.html')
+@home.route('/play/<int:id>/')
+def play(id=None):
+    movie = Movie.query.join(Tag).filter(
+        Tag.id == Movie.tag_id,
+        Movie.id == int(id)
+    ).first_or_404()
+    return render_template('home/play.html', movie=movie)
