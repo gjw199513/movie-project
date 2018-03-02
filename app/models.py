@@ -203,13 +203,13 @@ if __name__ == '__main__':
 
     # 创建超级管理员用户
     from werkzeug.security import generate_password_hash
-
-    admin = Admin(
-        name="gjw199513",
-        pwd=generate_password_hash("gjw605134015"),
-        is_super=0,
-        role_id=1
-    )
-    db.session.add(admin)
-    db.session.commit()
+    #
+    # admin = Admin(
+    #     name="gjw199513",
+    #     pwd=generate_password_hash("gjw605134015"),
+    #     is_super=0,
+    #     role_id=1
+    # )
+    # db.session.add(admin)
+    # db.session.commit()
 # """

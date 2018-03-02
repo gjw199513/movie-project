@@ -1,14 +1,18 @@
-{% extends 'home/home.html' %}
+{% extends "home/home.html" %}
 {% import "ui/comment_page.html" as pg %}
 
 {% block css %}
     <!--播放页面-->
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='jwplayer/skins/stormtrooper.css') }}">
-    <script type="text/javascript" src="{{ url_for('static', filename='ueditor/ueditor.config.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='ueditor/ueditor.all.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='ueditor/lang/zh-cn/zh-cn.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static',filename='dplayer/dist/DPlayer.min.css') }}">
+    <script src="{{ url_for('static',filename='dplayer/plugin/flv.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='dplayer/plugin/hls.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='dplayer/dist/DPlayer.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='ueditor/ueditor.config.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='ueditor/ueditor.all.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='ueditor/lang/zh-cn/zh-cn.js') }}"></script>
     <script>
         SyntaxHighlighter.all();
+
     </script>
     <!--播放页面-->
     <style>
@@ -16,12 +20,17 @@
             padding-right: 3px;
             padding-left: 3px;
         }
+
+        .dplayer-comment-setting-type > label {
+            display: inline;
+        }
     </style>
 {% endblock %}
+
 {% block content %}
     <div class="row">
         <div class="col-md-8">
-            <div id="moviecontainer"></div>
+            <div id="dplayer1" style="height:500px;width: 774px;"></div>
         </div>
         <div class="col-md-4" style="height:500px;">
             <div class="panel panel-info">
@@ -60,10 +69,10 @@
                             </td>
                             <td>
                                 <div>
-                                    {% for val in range(1, movie.star + 1) %}
+                                    {% for val in range(1,movie.star + 1) %}
                                         <span class="glyphicon glyphicon-star" style="color:#FFD119"></span>
                                     {% endfor %}
-                                    {% for val in range(1, 6 - movie.star) %}
+                                    {% for val in range(1,6-movie.star) %}
                                         <span class="glyphicon glyphicon-star-empty" style="color:#FFD119"></span>
                                     {% endfor %}
                                 </div>
@@ -105,13 +114,14 @@
                     <h3 class="panel-title"><span class="glyphicon glyphicon-comment"></span>&nbsp;电影评论</h3>
                 </div>
                 <div class="panel-body" style="height:459px;overflow:scroll;">
-                    {% if 'user' not in session %}
+                    {% if "user" not in session %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert">
                                 <span aria-hidden="true">×</span>
                                 <span class="sr-only">Close</span>
                             </button>
-                            <strong>请先<a href="{{ url_for('home.login') }}" target="_blank" class="text-info">登录</a>，才可参与评论！</strong>
+                            <strong>请先<a href="{{ url_for('home.login') }}" target="_blank"
+                                         class="text-info">登录</a>，才可参与评论！</strong>
                         </div>
                     {% endif %}
                     <ol class="breadcrumb" style="margin-top:6px;">
@@ -119,10 +129,10 @@
                     </ol>
                     {% if "user" in session %}
                         {% for msg in get_flashed_messages(category_filter=["err"]) %}
-                            <p style="color: red">{{ msg }}</p>
+                            <p style="color:red;">{{ msg }}</p>
                         {% endfor %}
                         {% for msg in get_flashed_messages(category_filter=["ok"]) %}
-                            <p style="color: green;">{{ msg }}</p>
+                            <p style="color:green;">{{ msg }}</p>
                         {% endfor %}
                         <form role="form" style="margin-bottom:6px;" method="post">
                             <div class="form-group">
@@ -132,7 +142,7 @@
                                 </div>
                                 {% for err in form.content.errors %}
                                     <div class="col-md-12">
-                                        <font style="color: red">{{ err }}</font>
+                                        <font style="color:red">{{ err }}</font>
                                     </div>
                                 {% endfor %}
                             </div>
@@ -142,7 +152,7 @@
                             <a class="btn btn-danger" id="btn-col"><span class="glyphicon glyphicon-heart"></span>&nbsp;收藏电影</a>
                         </form>
                         <div class="col-md-12">
-                            <font style="color: green" id="show_col_msg"></font>
+                            <font style="color:green" id="show_col_msg"></font>
                         </div>
                         <div class="clearfix"></div>
                     {% endif %}
@@ -152,15 +162,13 @@
                                 <a>
                                     <i class="avatar size-L radius">
                                         {% if v.user.face %}
-                                        <img alt="50x50"
-                                             src="{{ url_for('static', filename='uploads/users/'+v.user.face) }}"
-                                             class="img-circle"
-                                             style="border:1px solid #abcdef;width: 50px;">
+                                            <img alt="50x50"
+                                                 src="{{ url_for('static',filename='uploads/users/'+v.user.face) }}"
+                                                 class="img-circle"
+                                                 style="border:1px solid #abcdef;width:50px;">
                                         {% else %}
-                                        <img alt="50x50"
-                                             data-src="holder.js/50x50"
-                                             class="img-circle"
-                                             style="border:1px solid #abcdef;width: 50px;">
+                                            <img alt="50x50" data-src="holder.js/50x50" class="img-circle"
+                                                 style="border:1px solid #abcdef;width:50px;">
                                         {% endif %}
                                     </i>
                                 </a>
@@ -175,17 +183,14 @@
                                         </div>
                                     </header>
                                     <div class="comment-body">
-                                        <p>{{ v.content|safe }}</p>
+                                        <p>{{ v.content | safe }}</p>
                                     </div>
                                 </div>
                             </li>
                         {% endfor %}
                     </ul>
                     <div class="col-md-12 text-center">
-                        <nav aria-label="Page navigation">
-                            {{ pg.page(page_data,'home.play', movie.id) }}
-
-                        </nav>
+                        {{ pg.page(page_data,'home.video',movie.id) }}
                     </div>
                 </div>
             </div>
@@ -195,7 +200,18 @@
 
 {% block js %}
     <!--播放页面-->
-    <script src="{{ url_for('static', filename='jwplayer/jwplayer.js') }}"></script>
+    <script>
+        var dp1 = new DPlayer({
+            element: document.getElementById('dplayer1'),
+            video: {
+                url: "{{ url_for('static',filename='uploads/'+movie.url) }}",
+            },
+            danmaku: {
+                id: '{{ movie.id }}',
+                api: "/tm/"
+            }
+        });
+    </script>
     <script>
         var ue = UE.getEditor('input_content', {
             toolbars: [
@@ -204,36 +220,8 @@
             initialFrameWidth: "100%",
             initialFrameHeight: "100",
         });
+
     </script>
-    <script type="text/javascript">
-        jwplayer.key = "P9VTqT/X6TSP4gi/hy1wy23BivBhjdzVjMeOaQ==";
-    </script>
-    <script type="text/javascript">
-        jwplayer("moviecontainer").setup({
-            flashplayer: "{{ url_for('static', filename='jwplayer/jwplayer.flash.swf') }}",
-            playlist: [{
-                file: "{{ url_for('static', filename='uploads/'+movie.url) }}",
-                title: "{{ movie.title }}"
-            }],
-            modes: [{
-                type: "html5"
-            }, {
-                type: "flash",
-                src: "{{ url_for('static', filename='jwplayer/jwplayer.flash.swf') }}"
-            }, {
-                type: "download"
-            }],
-            skin: {
-                name: "vapor"
-            },
-            "playlist.position": "left",
-            "playlist.size": 400,
-            height: 500,
-            width: 774,
-        });
-    </script>
-    <!--播放页面-->
-    {#  收藏电影  #}
     <script>
         $(document).ready(function () {
             $("#btn-col").click(function () {
@@ -246,16 +234,16 @@
                     dataType: "json",
                     success: function (res) {
                         if (res.ok == 1) {
-                            $('#show_col_msg').empty();
-                            $('#show_col_msg').append("收藏成功！");
+                            $("#show_col_msg").empty();
+                            $("#show_col_msg").append("收藏成功！");
                         } else {
-                            $('#show_col_msg').empty();
-                            $('#show_col_msg').append("已经收藏！");
+                            $("#show_col_msg").empty();
+                            $("#show_col_msg").append("已经收藏！");
                         }
                     }
                 })
             });
-
         });
     </script>
+    <!--播放页面-->
 {% endblock %}

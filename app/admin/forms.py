@@ -358,7 +358,8 @@ class AdminForm(FlaskForm):
     role_id = SelectField(
         label="所属角色",
         coerce=int,
-        choices=[(v.id, v.name) for v in role_list],
+        # 禁止添加超级管理员
+        choices=[(v.id, v.name) for v in role_list if v.id != 1],
         render_kw={
             "class": "form-control"
         }

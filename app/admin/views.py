@@ -44,14 +44,16 @@ def admin_auth(f):
             Role.id == Admin.role_id,
             Admin.id == session["admin_id"]
         ).first()
-        auths = admin.role.auths
         # 遗留bug，当auth为空，出现异常
-        auths = list(map(lambda v: int(v), auths.split(",")))
-        auth_list = Auth.query.all()
-        urls = [v.url for v in auth_list for val in auths if val == v.id]
-        rule = request.url_rule
-        if str(rule) not in urls:
-            abort(404)
+        # 解决办法：为auths不为空的值，在进行限制
+        if admin.is_super != 0:
+            auths = admin.role.auths
+            auths = list(map(lambda v: int(v), auths.split(",")))
+            auth_list = Auth.query.all()
+            urls = [v.url for v in auth_list for val in auths if val == v.id]
+            rule = request.url_rule
+            if str(rule) not in urls:
+                abort(404)
         return f(*args, **kwargs)
 
     return decorated_function
@@ -209,7 +211,7 @@ def tag_del(id=None):
 # 添加电影
 @admin.route('/movie/add/', methods=["GET", "POST"])
 @admin_login_req
-# @admin_auth
+@admin_auth
 def movie_add():
     form = MovieForm()
     if form.validate_on_submit():
@@ -250,7 +252,7 @@ def movie_add():
 # 编辑电影
 @admin.route('/movie/edit/<int:id>', methods=["GET", "POST"])
 @admin_login_req
-# @admin_auth
+@admin_auth
 def movie_edit(id=None):
     form = MovieForm()
     form.url.validators = []
@@ -302,7 +304,7 @@ def movie_edit(id=None):
 # 电影列表
 @admin.route('/movie/list/<int:page>', methods=["GET"])
 @admin_login_req
-# @admin_auth
+@admin_auth
 def movie_list(page=None):
     if page is None:
         page = 1
@@ -319,7 +321,7 @@ def movie_list(page=None):
 # 删除电影
 @admin.route('/movie/del/<int:id>', methods=["GET"])
 @admin_login_req
-# @admin_auth
+@admin_auth
 def movie_del(id=None):
     movie = Movie.query.get_or_404(int(id))
     db.session.delete(movie)
@@ -332,7 +334,7 @@ def movie_del(id=None):
 # 添加上映预告
 @admin.route('/preview/add/', methods=["GET", "POST"])
 @admin_login_req
-# @admin_auth
+@admin_auth
 def preview_add():
     form = PreviewForm()
     if form.validate_on_submit():
@@ -361,7 +363,7 @@ def preview_add():
 # 上映预告列表
 @admin.route('/preview/list/<int:page>', methods=["GET"])
 @admin_login_req
-# @admin_auth
+@admin_auth
 def preview_list(page=None):
     if page is None:
         page = 1
@@ -374,7 +376,7 @@ def preview_list(page=None):
 # 删除上映预告
 @admin.route('/preview/del/<int:id>', methods=["GET"])
 @admin_login_req
-# @admin_auth
+@admin_auth
 def preview_del(id=None):
     preview = Preview.query.get_or_404(int(id))
     db.session.delete(preview)
@@ -386,7 +388,7 @@ def preview_del(id=None):
 # 编辑上映预告
 @admin.route('/preview/edit/<int:id>/', methods=["GET", "POST"])
 @admin_login_req
-# @admin_auth
+@admin_auth
 def preview_edit(id=None):
     form = PreviewForm()
     form.logo.validators = []
@@ -426,7 +428,7 @@ def user_list(page=None):
 
 
 # 查看会员
-@admin.route('/user/view/<int:id>', methods=["GET"])
+@admin.route('/user/view/<int:id>/', methods=["GET"])
 @admin_login_req
 @admin_auth
 def user_view(id=None):
@@ -657,10 +659,11 @@ def role_list(page=None):
     if page is None:
         page = 1
     # sqlalchemy中的分页功能Pagination
+    role = Role.query.all()
     page_data = Role.query.order_by(
         Role.addtime.desc()
     ).paginate(page=page, per_page=10)
-    return render_template('admin/role_list.html', page_data=page_data)
+    return render_template('admin/role_list.html', page_data=page_data, role=role)
 
 
 # 删除角色

@@ -3,6 +3,7 @@ __author__ = 'gjw'
 __date__ = '2018/1/26 15:46'
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
+from flask.ext.redis import FlaskRedis
 import pymysql
 import os
 
@@ -13,12 +14,15 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:gjw605134015@local
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 # 安全码
 app.config["SECRET_KEY"] = "0993703df6ef45aba560f493b14fc49e"
+# redis连接
+app.config["REDIS_URL"] = "redis://127.0.0.1:6379/0"
 
 app.config["UP_DIR"] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/")
 app.config["FC_DIR"] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/users/")
 
 app.debug = True
 db = SQLAlchemy(app)
+rd = FlaskRedis(app)
 
 # 注册蓝图
 from app.home import home as home_blueprint
