@@ -12,10 +12,12 @@ auth_list = Auth.query.all()
 role_list = Role.query.all()
 
 
+# 管理员登录表单
 class LoginForm(FlaskForm):
-    # 管理员登录表单
     account = StringField(
+        # Field的label的文本
         label='账号',
+        # 验证器
         validators=[
             DataRequired('请输入账号！')
         ],
@@ -25,6 +27,7 @@ class LoginForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": "请输入账号！",
+            # html中的required字段，由于自定义错误提示，不需要该字段
             # "required": "required",
         }
     )
@@ -38,7 +41,6 @@ class LoginForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": "请输入密码！",
-            # "required": "required",
         }
     )
     submit = SubmitField(
@@ -48,13 +50,16 @@ class LoginForm(FlaskForm):
         }
     )
 
+    # account字段验证
     def validate_account(self, field):
         account = field.data
+        # 查找该用户名的数量
         admin = Admin.query.filter_by(name=account).count()
         if admin == 0:
             raise ValidationError("账号不存在！")
 
 
+# 标签表单
 class TagForm(FlaskForm):
     name = StringField(
         label="名称",
@@ -76,6 +81,7 @@ class TagForm(FlaskForm):
     )
 
 
+# 电影表单
 class MovieForm(FlaskForm):
     title = StringField(
         label="片名",
@@ -88,6 +94,7 @@ class MovieForm(FlaskForm):
             "placeholder": "请输入片名！",
         }
     )
+    # 文件上传使用
     url = FileField(
         label="文件",
         validators=[
@@ -113,6 +120,7 @@ class MovieForm(FlaskForm):
         ],
         description="封面",
     )
+    # 单选框
     star = SelectField(
         label="星级",
         validators=[
@@ -133,6 +141,7 @@ class MovieForm(FlaskForm):
         ],
         # 允许类型
         coerce=int,
+        # 从tag中找到所有的id和对应的name组成选项
         choices=[(v.id, v.name) for v in tags],
         description="星级",
         render_kw={
@@ -181,6 +190,7 @@ class MovieForm(FlaskForm):
     )
 
 
+# 预告片表单
 class PreviewForm(FlaskForm):
     title = StringField(
         label="预告标题",
@@ -208,6 +218,7 @@ class PreviewForm(FlaskForm):
     )
 
 
+# 密码表单
 class PwdForm(FlaskForm):
     old_pwd = PasswordField(
         label="旧密码",
@@ -218,7 +229,6 @@ class PwdForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": "请输入旧密码！",
-            # "required": "required",
         }
     )
     new_pwd = PasswordField(
@@ -230,19 +240,22 @@ class PwdForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": "请输入密码！",
-            # "required": "required",
         }
     )
     submit = SubmitField(
+        # 显示内容
         "修改",
         render_kw={
             "class": "btn btn-primary",
         }
     )
 
-    # 验证旧密码
+    # 验证旧密码是否是该用户的密码
+    # validate+字段名可以作为验证函数
     def validate_old_pwd(self, field):
         from flask import session
+        # 表单中输入的密码数据
+        # print(str(field))
         pwd = field.data
         name = session['admin']
         admin = Admin.query.filter_by(
@@ -252,6 +265,7 @@ class PwdForm(FlaskForm):
             raise ValidationError('旧密码错误')
 
 
+# 权限表单
 class AuthForm(FlaskForm):
     name = StringField(
         label="权限名称",
@@ -283,6 +297,7 @@ class AuthForm(FlaskForm):
     )
 
 
+# 角色表单
 class RoleForm(FlaskForm):
     name = StringField(
         label="角色名称",
@@ -295,13 +310,14 @@ class RoleForm(FlaskForm):
             "placeholder": "请输入角色名称！",
         }
     )
+    # 多选框定义
     auths = SelectMultipleField(
         label="权限列表",
         validators=[
             DataRequired("请选择权限列表！")
         ],
-        # 多选框定义
         coerce=int,
+        # 为多选框的选项：每个选项以元组的形式保存，前面为输入的值，后面为显示内容
         choices=[(v.id, v.name) for v in auth_list],
         description="权限列表",
         render_kw={
@@ -316,6 +332,7 @@ class RoleForm(FlaskForm):
     )
 
 
+# 管理员表单
 class AdminForm(FlaskForm):
     name = StringField(
         label='管理员名称',
@@ -346,7 +363,7 @@ class AdminForm(FlaskForm):
         label="管理员重复密码",
         validators=[
             DataRequired('请输入管理员重复密码！'),
-            # 判断是否密码是否相同
+            # 判断新旧密码是否相同
             EqualTo("pwd", message="两次密码不一致")
         ],
         description="管理员重复密码",
@@ -358,7 +375,8 @@ class AdminForm(FlaskForm):
     role_id = SelectField(
         label="所属角色",
         coerce=int,
-        # 禁止添加超级管理员
+        # 进行优化：禁止添加超级管理员
+        # 使用id来限制超级管理员角色的id，无法显示添加超级管理员权限
         choices=[(v.id, v.name) for v in role_list if v.id != 1],
         render_kw={
             "class": "form-control"

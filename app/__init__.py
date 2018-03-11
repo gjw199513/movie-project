@@ -7,6 +7,7 @@ from flask.ext.redis import FlaskRedis
 import pymysql
 import os
 
+# 创建一个新的应用
 app = Flask(__name__)
 # 连接数据库
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:gjw605134015@localhost:3306/movie"
@@ -17,6 +18,7 @@ app.config["SECRET_KEY"] = "0993703df6ef45aba560f493b14fc49e"
 # redis连接
 app.config["REDIS_URL"] = "redis://127.0.0.1:6379/0"
 
+# 上传文件配置
 app.config["UP_DIR"] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/")
 app.config["FC_DIR"] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/users/")
 

@@ -18,17 +18,23 @@ import datetime
 @admin.context_processor
 def tpl_extra():
     date = dict(
-        online_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # 该变量为全局变量，在父模板直接引用即可在全部页面实现全局时间
+        online_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        # aaa="aaaaaaaa"
     )
     return date
 
 
 # 登录控制函数
 def admin_login_req(f):
+    # wraps装饰器可以有效的解决被装饰函数在help命令无法显示函数名和解释文档的问题
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # 判断登录时存入的session数据是否存在
         if "admin" not in session:
+            # 在url后加入next参数
             return redirect(url_for('admin.login', next=request.url))
+
         return f(*args, **kwargs)
 
     return decorated_function
@@ -38,6 +44,9 @@ def admin_login_req(f):
 def admin_auth(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # 将admin表和role表连接
+        # 条件是：1.admin中的role_id和role中的id相同
+        #        2.admin中的id和session中设置的admin_id值相同
         admin = Admin.query.join(
             Role
         ).filter(
@@ -45,15 +54,23 @@ def admin_auth(f):
             Admin.id == session["admin_id"]
         ).first()
         # 遗留bug，当auth为空，出现异常
-        # 解决办法：为auths不为空的值，在进行限制
+        # 解决办法：为auths不为空的值，在进行限制，
+        #         由于auths值为空只有在最初设置超级管理员存在，可以使用超级管理员的is_supper来进行判断
         if admin.is_super != 0:
+            # 查找该管理员拥有的权限
             auths = admin.role.auths
+            # 将字符串以逗号分隔为列表
             auths = list(map(lambda v: int(v), auths.split(",")))
+            # 查询出表中所有的权限
             auth_list = Auth.query.all()
+            # 保存匹配的权限
             urls = [v.url for v in auth_list for val in auths if val == v.id]
+            # 保存权限的url
             rule = request.url_rule
+            # 判断是否具有该权限，没有返回404页面
             if str(rule) not in urls:
                 abort(404)
+
         return f(*args, **kwargs)
 
     return decorated_function
@@ -62,7 +79,9 @@ def admin_auth(f):
 # 修改文件名称
 def change_filename(filename):
     # 将文件名分割
+    # splitext:返回路径名和文件扩展名的元组
     fileinfo = os.path.splitext(filename)
+    # 将文件重名：上传时间+uuid+扩展名
     filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(uuid.uuid4().hex) + fileinfo[-1]
     return filename
 
@@ -81,15 +100,22 @@ def index():
 def login():
     form = LoginForm()
     # 提交的数据验证
+    # validate_on_submit 会便捷地检查该请求是否是一个 POST 请求以及是否有效
     if form.validate_on_submit():
         # 表单中的数据
         data = form.data
+        # 查询name与表单中的account字段匹配的数据
         admin = Admin.query.filter_by(name=data["account"]).first()
+        # 判断查询到的用户和表单中的pwd数据是否匹配
         if not admin.check_pwd(data["pwd"]):
+            # 闪现错误消息
             flash("密码错误！", 'err')
+            # 重定向到登录
             return redirect(url_for('admin.login'))
+        # 密码匹配成功
+        # 将表单的account数据存入session的admin字段中
         session['admin'] = data['account']
-        # 保存id
+        # 将admin的id保存到session的admin_id字段中
         session['admin_id'] = admin.id
         # 管理员登录日志保存
         adminlog = Adminlog(
@@ -106,8 +132,8 @@ def login():
 @admin.route('/logout/')
 @admin_login_req
 def logout():
+    # 将登录保存的admin和admin_id出栈
     session.pop('admin', None)
-    # 删除id
     session.pop('admin_id', None)
     return redirect(url_for('admin.login'))
 
@@ -121,6 +147,7 @@ def pwd():
         data = form.data
         admin = Admin.query.filter_by(name=session['admin']).first()
         from werkzeug.security import generate_password_hash
+        # 将新密码进行hash加密
         admin.pwd = generate_password_hash(data['new_pwd'])
         db.session.add(admin)
         db.session.commit()
@@ -142,12 +169,14 @@ def tag_add():
         if tag == 1:
             flash("名称已存在", "err")
             return redirect(url_for("admin.tag_add"))
+        # 将表单的name字段存入tag的name中
         tag = Tag(
             name=data["name"]
         )
         db.session.add(tag)
         db.session.commit()
         flash("添加标签成功", "ok")
+        # 将登录用户信息、ip地址、原因存入oplog中
         oplog = Oplog(
             admin_id=session['admin_id'],
             ip=request.remote_addr,
@@ -165,10 +194,12 @@ def tag_add():
 @admin_auth
 def tag_edit(id=None):
     form = TagForm()
+    # 查找id，不存在返回404
     tag = Tag.query.get_or_404(id)
     if form.validate_on_submit():
         data = form.data
         tag_count = Tag.query.filter_by(name=data["name"]).count()
+        # 表单name值和该tag的name不同并且该tag的name存在
         if tag.name != data['name'] and tag_count == 1:
             flash("名称已存在", "err")
             return redirect(url_for("admin.tag_edit", id=id))
@@ -222,6 +253,7 @@ def movie_add():
         # 在未存在文件路径时，创建文件
         if not os.path.exists(app.config['UP_DIR']):
             os.makedirs(app.config['UP_DIR'])
+            # 将文件将文件夹权限改为读写
             os.chmod(app.config["UP_DIR"], "rw")
         # 文件改名
         url = change_filename(file_url)
@@ -229,6 +261,7 @@ def movie_add():
         # 保存文件
         form.url.data.save(app.config["UP_DIR"] + url)
         form.logo.data.save(app.config["UP_DIR"] + logo)
+        # 将输入的信息保存到movie中
         movie = Movie(
             title=data['title'],
             url=url,
@@ -255,6 +288,7 @@ def movie_add():
 @admin_auth
 def movie_edit(id=None):
     form = MovieForm()
+    # url和logo可以不传入数据
     form.url.validators = []
     form.logo.validators = []
     movie = Movie.query.get_or_404(int(id))
@@ -310,6 +344,7 @@ def movie_list(page=None):
         page = 1
     # sqlalchemy中的分页功能Pagination
     # filter用于多表关联，filter_by用于单表查询
+    # 将tag的id和movie的tag_id相等作为关联条件
     page_data = Movie.query.join(Tag).filter(
         Tag.id == Movie.tag_id
     ).order_by(
@@ -643,6 +678,7 @@ def role_add():
         role = Role(
             name=data['name'],
             # 将列表转换成以逗号连接的字符串
+            # 多选框中的内容连接成字符串存入
             auths=",".join(map(lambda v: str(v), data['auths']))
         )
         db.session.add(role)
@@ -659,11 +695,10 @@ def role_list(page=None):
     if page is None:
         page = 1
     # sqlalchemy中的分页功能Pagination
-    role = Role.query.all()
     page_data = Role.query.order_by(
         Role.addtime.desc()
     ).paginate(page=page, per_page=10)
-    return render_template('admin/role_list.html', page_data=page_data, role=role)
+    return render_template('admin/role_list.html', page_data=page_data)
 
 
 # 删除角色
@@ -687,12 +722,15 @@ def role_edit(id=None):
     form = RoleForm()
     role = Role.query.get_or_404(id)
     if request.method == "GET":
+        # 该角色的权限
         auths = role.auths
         # 将字符串转换为列表
+        # 将存入的id字符串分隔为列表，并且将其传入form中，RoleForm中的多选框选项与id匹配，进行显示
         form.auths.data = list(map(lambda v: int(v), auths.split(',')))
     if form.validate_on_submit():
         data = form.data
         role.name = data["name"]
+        # 将分隔的列表转换为字符串（存入数据库需以字符串的格式进行传递）
         role.auths = ",".join(map(lambda v: str(v), data['auths']))
         db.session.add(role)
         db.session.commit()
@@ -713,8 +751,10 @@ def admin_add():
         data = form.data
         admin = Admin(
             name=data['name'],
+            # 对密码进行hash加密
             pwd=generate_password_hash(data['pwd']),
             role_id=data['role_id'],
+            # 只有初始加入的管理员是超级管理员，以后无法将用户设为超级管理员
             is_super=1
         )
         db.session.add(admin)

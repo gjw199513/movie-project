@@ -161,6 +161,7 @@
                             <li class="item cl">
                                 <a>
                                     <i class="avatar size-L radius">
+                                    {# 新建用户没有头像，出现bug解决方法 #}
                                         {% if v.user.face %}
                                             <img alt="50x50"
                                                  src="{{ url_for('static',filename='uploads/users/'+v.user.face) }}"

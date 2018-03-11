@@ -107,12 +107,14 @@
     })
 
 </script>
+
 <script>
     $(document).ready(function () {
         $("img.lazy").lazyload({
             effect: "fadeIn"
         });
     });
+    {# 搜素js #}
     $("#do_search").click(function () {
         var key = $("#key_movie").val();
         location.href = "{{ url_for('home.search', page=1) }}?key=" + key

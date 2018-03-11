@@ -105,6 +105,7 @@
                     <h3 class="panel-title"><span class="glyphicon glyphicon-comment"></span>&nbsp;电影评论</h3>
                 </div>
                 <div class="panel-body" style="height:459px;overflow:scroll;">
+                {# 判断用户是否为登录状态 #}
                     {% if 'user' not in session %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert">
@@ -183,7 +184,7 @@
                     </ul>
                     <div class="col-md-12 text-center">
                         <nav aria-label="Page navigation">
-                            {{ pg.page(page_data,'home.play', movie.id) }}
+                            {{ pg.page(page_data,'home.video', movie.id) }}
 
                         </nav>
                     </div>

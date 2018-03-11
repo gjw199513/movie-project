@@ -9,6 +9,7 @@ from wtforms.validators import DataRequired, ValidationError, EqualTo, Email, Re
 from app.models import User
 
 
+# 注册表单
 class RegistForm(FlaskForm):
     name = StringField(
         label='昵称',
@@ -27,6 +28,7 @@ class RegistForm(FlaskForm):
         label='邮箱',
         validators=[
             DataRequired('请输入邮箱！'),
+            # 邮箱格式验证
             Email("邮箱格式不正确")
         ],
         # 描述
@@ -41,6 +43,7 @@ class RegistForm(FlaskForm):
         label='手机',
         validators=[
             DataRequired('请输入手机！'),
+            # 使用正则验证手机号码
             Regexp('1[3458]\d{9}', message="手机号码不正确!")
         ],
         # 描述
@@ -60,7 +63,6 @@ class RegistForm(FlaskForm):
         render_kw={
             "class": "form-control input-lg",
             "placeholder": "请输入密码！",
-            # "required": "required",
         }
     )
     repwd = PasswordField(
@@ -73,7 +75,6 @@ class RegistForm(FlaskForm):
         render_kw={
             "class": "form-control input-lg",
             "placeholder": "请输入确认密码！",
-            # "required": "required",
         }
     )
     submit = SubmitField(
@@ -83,18 +84,22 @@ class RegistForm(FlaskForm):
         }
     )
 
+    # 验证昵称是否存在
     def validate_name(self, filed):
         name = filed.data
+        # 查找是否存在该昵称
         user = User.query.filter_by(name=name).count()
         if user == 1:
             raise ValidationError("昵称已经存在")
 
+    # 验证邮箱是否存在
     def validate_email(self, filed):
         email = filed.data
         user = User.query.filter_by(email=email).count()
         if user == 1:
             raise ValidationError("邮箱已经存在")
 
+    # 验证电话号码是否存在
     def validate_phone(self, filed):
         phone = filed.data
         user = User.query.filter_by(phone=phone).count()
@@ -125,7 +130,6 @@ class LoginForm(FlaskForm):
         render_kw={
             "class": "form-control input-lg",
             "placeholder": "请输入密码！",
-            # "required": "required",
         }
     )
     submit = SubmitField(
@@ -136,6 +140,7 @@ class LoginForm(FlaskForm):
     )
 
 
+# 会员资料表单
 class UserdetailForm(FlaskForm):
     name = StringField(
         label='账号',
@@ -204,6 +209,7 @@ class UserdetailForm(FlaskForm):
     )
 
 
+# 密码表单
 class PwdForm(FlaskForm):
     old_pwd = PasswordField(
         label="旧密码",
@@ -214,7 +220,6 @@ class PwdForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": "请输入旧密码！",
-            # "required": "required",
         }
     )
     new_pwd = PasswordField(
@@ -226,7 +231,6 @@ class PwdForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": "请输入密码！",
-            # "required": "required",
         }
     )
     submit = SubmitField(
@@ -237,6 +241,7 @@ class PwdForm(FlaskForm):
     )
 
 
+# 评论表单
 class CommentForm(FlaskForm):
     content = TextAreaField(
         label="内容",

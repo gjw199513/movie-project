@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>微电影管理系统</title>
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    {# 静态文件导入 #}
     <link rel="shortcut icon" href="{{ url_for('static',filename='base/images/logo.png') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='admin/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='fonts/css/font-awesome.min.css') }}">
@@ -57,7 +58,7 @@
                             </li>
                             <li class="user-footer">
                                 <div class="pull-left">
-                                    <a href="{{ url_for('admin.pwd') }}" class="btn btn-default btn-flat">修改密码</a>
+                                    <a href="{{ url_for('admin.pwd') }}" class="btn btn-default btn-flat">修改密码{{ aaa }}</a>
                                 </div>
                                 <div class="pull-right">
                                     <a href="{{ url_for('admin.logout') }}" class="btn btn-default btn-flat">退出系统</a>
@@ -77,8 +78,9 @@
                          alt="User Image">
                 </div>
                 <div class="pull-left info">
+                    {# 保存在session中的用户名 #}
                     <p>用户{{ session['admin'] }}</p>
-                    <a href="#"><i class="fa fa-circle text-success"></i> 在线</a>
+                    <a><i class="fa fa-circle text-success"></i> 在线</a>
                 </div>
             </div>
             <form action="#" method="get" class="sidebar-form">
@@ -91,6 +93,7 @@
                     </span>
                 </div>
             </form>
+            {# 侧边导航模块导入 #}
             {% include 'admin/grid.html' %}
         </section>
     </aside>

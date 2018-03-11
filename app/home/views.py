@@ -52,7 +52,7 @@ def login():
         )
         db.session.add(userlog)
         db.session.commit()
-        return redirect(url_for('home.user'))
+        return redirect(url_for('home.index', page=1))
     return render_template('home/login.html', form=form)
 
 
@@ -76,6 +76,7 @@ def regist():
             email=data["email"],
             phone=data["phone"],
             pwd=generate_password_hash(data["pwd"]),
+            # 生产随机的uuid
             uuid=uuid.uuid4().hex
         )
         db.session.add(user)
@@ -93,6 +94,8 @@ def user():
     # 允许头像初始为空
     form.face.validators = []
     if request.method == "GET":
+        # 为表单设置默认值可以直接在form.属性.data中进行赋值
+        # 也可以在HTML字段中在value属性中设置默认值
         form.name.data = user.name
         form.email.data = user.email
         form.phone.data = user.phone
@@ -189,11 +192,14 @@ def loginlog(page=None):
 
 
 # 添加电影收藏
+# 在play/video下面的js中
 @home.route('/moviecol/add/', methods=["GET"])
 @user_login_req
 def moviecol_add():
+    # 获取url中的uid和mid参数
     uid = request.args.get("uid", "")
-    mid = request.args.get("mid","")
+    mid = request.args.get("mid", "")
+    # 用查询数量来查找该用户是否收藏过该电影
     moviecol = Moviecol.query.filter_by(
         user_id=int(uid),
         movie_id=int(mid),
@@ -201,6 +207,7 @@ def moviecol_add():
     if moviecol == 1:
         data = dict(ok=0)
 
+    # 未收藏则收藏，并存入数据库
     if moviecol == 0:
         moviecol = Moviecol(
             user_id=int(uid),
@@ -237,8 +244,9 @@ def moviecol(page=None):
 def index(page=None):
     tags = Tag.query.all()
     page_data = Movie.query
-
+    # 使用简便方法：加入url参数可以得到值
     # 根据标签筛选
+    # 得到参数值并且设置默认值
     tid = request.args.get('tid', 0)
     if int(tid) != 0:
         page_data = page_data.filter_by(tag_id=int(tid))
@@ -251,7 +259,7 @@ def index(page=None):
     # 根据时间先后筛选
     time = request.args.get("time", 0)
     if int(time) != 0:
-        if int(time):
+        if int(time) == 1:
             page_data = page_data.order_by(
                 Movie.addtime.desc()
             )
@@ -263,7 +271,7 @@ def index(page=None):
     # 根据播放量筛选
     pm = request.args.get("pm", 0)
     if int(pm) != 0:
-        if int(pm):
+        if int(pm) == 1:
             page_data = page_data.order_by(
                 Movie.playnum.desc()
             )
@@ -275,7 +283,7 @@ def index(page=None):
     # 根据评论数筛选
     cm = request.args.get("cm", 0)
     if int(cm) != 0:
-        if int(cm):
+        if int(cm) == 1:
             page_data = page_data.order_by(
                 Movie.commentnum.desc()
             )
@@ -287,6 +295,7 @@ def index(page=None):
     if page is None:
         page = 1
     page_data = page_data.paginate(page=page, per_page=10)
+    # 传入参数字典
     p = dict(
         tid=tid,
         star=star,
@@ -310,9 +319,11 @@ def search(page=None):
     if page is None:
         page = 1
     key = request.args.get("key", "")
+    # 统计搜索后的电影数
     movie_count = Movie.query.filter(
         Movie.title.like('%' + key + '%')
     ).count()
+    # 搜索后电影分页显示
     page_data = Movie.query.filter(
         Movie.title.like('%' + key + '%')
     ).order_by(
@@ -322,6 +333,8 @@ def search(page=None):
     return render_template('home/search.html', key=key, movie_count=movie_count, page_data=page_data)
 
 
+# 使用下面的弹幕播放器进行替换
+"""
 # 电影播放
 @home.route('/play/<int:id>/<int:page>/', methods=["GET", "POST"])
 def play(id=None, page=None):
@@ -360,6 +373,7 @@ def play(id=None, page=None):
     db.session.add(movie)
     db.session.commit()
     return render_template('home/play.html', movie=movie, form=form, page_data=page_data)
+"""
 
 
 # 弹幕播放器
@@ -382,7 +396,10 @@ def video(id=None, page=None):
         Comment.addtime.desc()
     ).paginate(page=page, per_page=10)
     movie.playnum += 1
+
+    # 评论相关
     form = CommentForm()
+    # 用户登录并且点击提交
     if "user" in session and form.validate_on_submit():
         data = form.data
         comment = Comment(
